@@ -31,12 +31,12 @@ impl ConnectionPool {
     }
 
     pub fn set_connection(&mut self, conn: Connection) -> Result<(), String> {
-        let connection_count = self.outgoing_connections.len() + self.incoming_connections.len();
-        if connection_count >= self.connection_limit {
-            let _ = self.pop();
-        }
+        self.pop();
 
-        self.incoming_connections.push(conn);
+        let connection_count = self.outgoing_connections.len() + self.incoming_connections.len();
+        if connection_count < self.connection_limit {
+            self.incoming_connections.push(conn);
+        }
 
         Ok(())
     }
