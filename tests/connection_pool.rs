@@ -1,13 +1,16 @@
-use sqlite_connection_pool::{Connection, from_thread_safe, get_connection, set_connection};
+use sqlite_connection_pool::arcd::{from_params, get_connection, set_connection};
+use sqlite_connection_pool::{Connection, Params};
 use std::fs;
 use std::path::PathBuf;
 
-const test_db_filepath: &str = "sqlite_connection_pool_tests.sqlite";
+const TEST_DB_FILEPATH: &str = "sqlite_connection_pool_tests.sqlite";
 
 #[test]
 fn test_lifecycle() -> Result<(), String> {
-    let db_path = PathBuf::from(test_db_filepath);
-    let pool = from_thread_safe(&db_path, 1);
+    let pool = from_params(Params {
+        db_filepath: PathBuf::from(TEST_DB_FILEPATH),
+        connection_limit: 2,
+    });
 
     let mut conn = match get_connection(&pool) {
         Ok(conn) => conn,
@@ -27,13 +30,14 @@ fn test_lifecycle() -> Result<(), String> {
         Err(e) => return Err(e),
     };
 
-    let message = get_hello_world_sqlite(&mut conn2);
+    let message2 = get_hello_world_sqlite(&mut conn2);
+    assert_eq!(Ok(1), message2);
 
     if let Err(e) = set_connection(&pool, conn2) {
         return Err(e);
     }
 
-    if let Err(e) = fs::remove_file(&db_path) {
+    if let Err(e) = fs::remove_file(&TEST_DB_FILEPATH) {
         return Err(e.to_string());
     };
 

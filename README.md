@@ -1,26 +1,38 @@
 # Sqlite Connection Pool - rs
 
-A sqlite connection pool using the rusqlite library.
+A sqlite connection pool that is also a facade for the [rusqlite](https://crates.io/crates/rusqlite) library.
 
 ## How to use
 
 ```rs
-use sqlite_connection_pool::{ConnectionPool};
+use sqlite_connection_pool::{ConnectionPool, Params};
 
 // filepath, connection count limit
-let pool = ConnectionPool::from("./filepath/to/sqlite.db", 8);
+let pool = ConnectionPool::from_params(Params {
+    db_filepath: PathBuf::from("./filepath/to/sqlite.db")m
+    connection_limit: 4,
+});
+
 let conn = pool.get_connection()?;
-let _ = pool.set_connection()?;
+let _ = pool.set_connection(conn)?;
 ```
 
-For a more thread safe experience:
+For a more thread safe experience use:
 ```rs
-use sqlite_connection_pool::{from_thread_safe, get_connection, set_connection};
+use sqlite_connection_pool::Params;
+use sqlite_connection_pool::arcd::{from_params_, get_connection, set_connection};
 
-let thread_safe_pool = from_thread_safe("./filepath/to/sqlite.db", 8);
-let conn = get_connection(&thread_safe_pool)?;
-let _ = set_connection(&thread_safe_pool, conn)?;
+// Arc<Mutex<ConnectionPool>>
+let pool = from_params(Params {
+    db_filepath: PathBuf::from("./filepath/to/sqlite.db")m
+    connection_limit: 4,
+});
+
+let conn = get_connection(&pool)?;
+let _ = set_connection(&pool, conn)?;
 ```
+
+The `get_connection` and `set_connection` are a utility to lock and free mutexes before using a connection.
 
 # License
 
