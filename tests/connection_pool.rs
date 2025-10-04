@@ -1,16 +1,13 @@
 use sqlite_connection_pool::{Connection, from_thread_safe, get_connection, set_connection};
 use std::fs;
-use std::path;
+use std::path::PathBuf;
 
 const test_db_filepath: &str = "sqlite_connection_pool_tests.sqlite";
 
-struct TestResult {
-    hello_world: usize,
-}
-
 #[test]
 fn test_lifecycle() -> Result<(), String> {
-    let pool = from_thread_safe(test_db_filepath, 1);
+    let db_path = PathBuf::from(test_db_filepath);
+    let pool = from_thread_safe(&db_path, 1);
 
     let mut conn = match get_connection(&pool) {
         Ok(conn) => conn,
@@ -19,8 +16,7 @@ fn test_lifecycle() -> Result<(), String> {
 
     // pass connection as mutable reference to preserve ownership in test function scope
     let message = get_hello_world_sqlite(&mut conn);
-
-    println!("{:?}", message);
+    assert_eq!(Ok(1), message);
 
     if let Err(e) = set_connection(&pool, conn) {
         return Err(e);
@@ -37,7 +33,7 @@ fn test_lifecycle() -> Result<(), String> {
         return Err(e);
     }
 
-    if let Err(e) = fs::remove_file(test_db_filepath) {
+    if let Err(e) = fs::remove_file(&db_path) {
         return Err(e.to_string());
     };
 

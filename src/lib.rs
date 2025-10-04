@@ -3,17 +3,22 @@ pub use rusqlite::Connection;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+pub struct ConnectionPoolParams {
+    db_filepath: PathBuf,
+    connection_limit: usize,
+}
+
 pub struct ConnectionPool {
-    db_path: String,
+    db_path: PathBuf,
     connection_limit: usize,
     incoming_connections: Vec<Connection>,
     outgoing_connections: Vec<Connection>,
 }
 
 impl ConnectionPool {
-    pub fn from(db_path: &str, connection_limit: usize) -> ConnectionPool {
+    pub fn from(db_path: &PathBuf, connection_limit: usize) -> ConnectionPool {
         ConnectionPool {
-            db_path: db_path.to_string(),
+            db_path: db_path.clone(),
             incoming_connections: Vec::new(),
             outgoing_connections: Vec::new(),
             connection_limit,
@@ -53,7 +58,7 @@ impl ConnectionPool {
     }
 }
 
-pub fn from_thread_safe(db_path: &str, connection_limit: usize) -> Arc<Mutex<ConnectionPool>> {
+pub fn from_thread_safe(db_path: &PathBuf, connection_limit: usize) -> Arc<Mutex<ConnectionPool>> {
     Arc::new(Mutex::new(ConnectionPool::from(db_path, connection_limit)))
 }
 
