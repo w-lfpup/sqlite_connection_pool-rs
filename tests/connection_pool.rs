@@ -1,5 +1,4 @@
-use sqlite_connection_pool::arcd::{from_params, get_connection, set_connection};
-use sqlite_connection_pool::{Connection, Params};
+use sqlite_connection_pool::{Connection, ConnectionPool, Params};
 use std::fs;
 use std::path::PathBuf;
 
@@ -7,12 +6,12 @@ const TEST_DB_FILEPATH: &str = "sqlite_connection_pool_tests.sqlite";
 
 #[test]
 fn test_lifecycle() -> Result<(), String> {
-    let pool = from_params(Params {
+    let mut pool = ConnectionPool::from_params(Params {
         db_filepath: PathBuf::from(TEST_DB_FILEPATH),
         connection_limit: 2,
     });
 
-    let mut conn = match get_connection(&pool) {
+    let mut conn = match pool.get_connection() {
         Ok(conn) => conn,
         Err(e) => return Err(e),
     };
@@ -21,11 +20,11 @@ fn test_lifecycle() -> Result<(), String> {
     let message = get_hello_world_sqlite(&mut conn);
     assert_eq!(Ok(1), message);
 
-    if let Err(e) = set_connection(&pool, conn) {
+    if let Err(e) = pool.set_connection(conn) {
         return Err(e);
     }
 
-    let mut conn2 = match get_connection(&pool) {
+    let mut conn2 = match pool.get_connection() {
         Ok(conn) => conn,
         Err(e) => return Err(e),
     };
@@ -33,7 +32,7 @@ fn test_lifecycle() -> Result<(), String> {
     let message2 = get_hello_world_sqlite(&mut conn2);
     assert_eq!(Ok(1), message2);
 
-    if let Err(e) = set_connection(&pool, conn2) {
+    if let Err(e) = pool.set_connection(conn2) {
         return Err(e);
     }
 
