@@ -1,4 +1,4 @@
-use sqlite_connection_pool::{ConnectionPool, Connection, Params};
+use sqlite_connection_pool::{Connection, ConnectionPool, Params};
 use std::fs;
 use std::path::PathBuf;
 
